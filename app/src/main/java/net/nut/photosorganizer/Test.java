@@ -30,7 +30,9 @@ public class Test
             {
                 private String findOrCreateFolder(String parent, String title)
                 {
-                    ArrayList<ContentValues> cvs = DriveController.search(parent, title, Constants.MIME_FLDR);
+                    DriveController.search(parent, title, Constants.MIME_FLDR);
+                    ArrayList<ContentValues> cvs = DriveController.getSearchResults();
+
                     String id, txt;
 
                     if (cvs.size() > 0)
@@ -122,7 +124,9 @@ public class Test
             {
                 private void iterate(ContentValues parent)
                 {
-                    ArrayList<ContentValues> cvs = DriveController.search(null, null, Constants.MIME_JPG);
+                    DriveController.search(null, null, Constants.MIME_JPG);
+                    ArrayList<ContentValues> cvs = DriveController.getSearchResults();
+
                     if (cvs != null)
                         for (ContentValues cv : cvs)
                         {
@@ -157,7 +161,10 @@ public class Test
                 @Override
                 protected Void doInBackground(Void... params) {
                     MainActivity.isBusy = true;
-                    ArrayList<ContentValues> gfMyRoot = DriveController.search(null, null, Constants.MIME_JPG);
+
+                    DriveController.search(null, null, Constants.MIME_JPG);
+                    ArrayList<ContentValues> gfMyRoot = DriveController.getSearchResults();
+
                     if (gfMyRoot != null && gfMyRoot.size() == 1 ){
                         publishProgress(gfMyRoot.get(0).getAsString("title"));
                         iterate(gfMyRoot.get(0));
@@ -188,7 +195,10 @@ public class Test
             new AsyncTask<Void, String, Void>() {
 
                 private void iterate(ContentValues gfParent) {
-                    ArrayList<ContentValues> cvs = DriveController.search(gfParent.getAsString(Constants.DRIVE_ID), null, null);
+
+                    DriveController.search(gfParent.getAsString(Constants.DRIVE_ID), null, null);
+                    ArrayList<ContentValues> cvs = DriveController.getSearchResults();
+
                     if (cvs != null) for (ContentValues cv : cvs) {
                         String gdid = cv.getAsString(Constants.DRIVE_ID);
                         String titl = cv.getAsString("title");
@@ -215,7 +225,10 @@ public class Test
                 @Override
                 protected Void doInBackground(Void... params) {
                     MainActivity.isBusy = true;
-                    ArrayList<ContentValues> gfMyRoot = DriveController.search("root", Constants.MYROOT, null);
+
+                    DriveController.search("root", Constants.MYROOT, null);
+                    ArrayList<ContentValues> gfMyRoot = DriveController.getSearchResults();
+
                     if (gfMyRoot != null && gfMyRoot.size() == 1 ){
                         publishProgress(gfMyRoot.get(0).getAsString("title"));
                         iterate(gfMyRoot.get(0));
@@ -249,7 +262,10 @@ public class Test
             new AsyncTask<Void, String, Void>() {
 
                 private void iterate(ContentValues gfParent) {
-                    ArrayList<ContentValues> cvs = DriveController.search(gfParent.getAsString(Constants.DRIVE_ID), null, null);
+
+                    DriveController.search(gfParent.getAsString(Constants.DRIVE_ID), null, null);
+                    ArrayList<ContentValues> cvs = DriveController.getSearchResults();
+
                     if (cvs != null) for (ContentValues cv : cvs) {
                         String titl = cv.getAsString("title");
                         String gdid = cv.getAsString(Constants.DRIVE_ID);
@@ -262,7 +278,10 @@ public class Test
                 @Override
                 protected Void doInBackground(Void... params) {
                     MainActivity.isBusy = true;
-                    ArrayList<ContentValues> gfMyRoot = DriveController.search("root", Constants.MYROOT, null);
+
+                    DriveController.search("root", Constants.MYROOT, null);
+                    ArrayList<ContentValues> gfMyRoot = DriveController.getSearchResults();
+
                     if (gfMyRoot != null && gfMyRoot.size() == 1 ){
                         ContentValues cv = gfMyRoot.get(0);
                         iterate(cv);

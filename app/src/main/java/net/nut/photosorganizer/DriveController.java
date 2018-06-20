@@ -38,6 +38,7 @@ public class DriveController
     private static com.google.api.services.drive.Drive driveService;
     private static boolean isConnected;
     private static ConnectionCallback callback;
+    private static ArrayList<ContentValues> searchResults;
 
     static boolean init(Activity activity)
     {
@@ -119,13 +120,80 @@ public class DriveController
     static void disconnect() {}
 
     /**
+     * Fetch the results of the last search operation.
+     * @return  The ArrayList containing all of the results.
+     */
+    public static ArrayList<ContentValues> getSearchResults()
+    {
+        return searchResults;
+    }
+
+    /**
+     * A version of the search function which will return results a single page at a time.
+     * @param parent    (optional)  Parent ID. Use null to search full drive or root to search root.
+     * @param title     (optional)  The name of the thing we're looking for.
+     * @param mime      (optional)  The mime type of the thing we're looking for.
+     * @param pageToken (optional)  The token of the next page of results.
+     * @return                      The token for the next page of results.
+     */
+    public static String paginatedSearch(String parent, String title, String mime, String pageToken)
+    {
+        ArrayList<ContentValues> matches = new ArrayList<>();
+
+        if (driveService != null && isConnected)
+        {
+            try
+            {
+                String queryClause = "'me' in owners and ";
+                if (parent != null)
+                    queryClause += "'" + parent + "' in parents and ";
+                if (title != null)
+                    queryClause += "title = '" + title + "' and ";
+                if (mime != null)
+                    queryClause += "mimeType = '" + mime + "' and ";
+                queryClause = queryClause.substring(0, queryClause.length() - " and ".length());
+
+                Drive.Files.List query = driveService.files().list()
+                        .setQ(queryClause)
+                        .setFields("items(id,mimeType,labels/trashed,title),nextPageToken");
+                if (pageToken != null)
+                    query.setPageToken(pageToken);
+
+                if (query != null)
+                {
+                    FileList list = query.execute();
+
+                    if (list != null)
+                    {
+                        for (File file : list.getItems())
+                        {
+                            if (file.getLabels().getTrashed())
+                                continue;
+                            matches.add(Utilities.newVals(file.getTitle(), file.getId(), file.getMimeType()));
+                        }
+
+                        searchResults = matches;
+
+                        return list.getNextPageToken();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Searches for a given file/folder in Drive.
      * @param parent Parent ID (optional). null to search full drive, "root" to search root directory.
      * @param title The name of the thing we're looking for (optional).
      * @param mime The mime type of the thing we're looking for (optional).
-     * @return An ArrayList containing the found objects.
      */
-    static ArrayList<ContentValues> search(String parent, String title, String mime)
+    static void search(String parent, String title, String mime)
     {
         ArrayList<ContentValues> matches = new ArrayList<>();
 
@@ -172,7 +240,8 @@ public class DriveController
                 Log.e(TAG, e.getMessage(), e);
             }
         }
-        return matches;
+
+        searchResults = matches;
     }
 
     /**

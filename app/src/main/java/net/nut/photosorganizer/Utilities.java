@@ -25,10 +25,6 @@ public class Utilities
     private static SharedPreferences preferences;
     public static Context context;
 
-    static final String TITLE = "title";
-    static final String DRIVE_ID = "driveID";
-    static final String MIME = "mime";
-
     static void init(Context ctx)
     {
         context = ctx.getApplicationContext();
@@ -59,11 +55,11 @@ public class Utilities
         ContentValues returnVal = new ContentValues();
 
         if (title != null)
-            returnVal.put(TITLE, title);
+            returnVal.put(Constants.TITLE, title);
         if (driveID != null)
-            returnVal.put(DRIVE_ID, driveID);
+            returnVal.put(Constants.DRIVE_ID, driveID);
         if (mime != null)
-            returnVal.put(MIME, mime);
+            returnVal.put(Constants.MIME, mime);
 
         return returnVal;
     }
