@@ -1,14 +1,24 @@
 package net.nut.photosorganizer;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+import android.util.Log;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 public class Test
 {
+    protected static Context ctx;
+
     @SuppressLint("StaticFieldLeak")
     protected static void createTree(final String title)
     {
@@ -20,7 +30,7 @@ public class Test
             {
                 private String findOrCreateFolder(String parent, String title)
                 {
-                    ArrayList<ContentValues> cvs = RESTController.search(parent, title, Constants.MIME_FLDR);
+                    ArrayList<ContentValues> cvs = DriveController.search(parent, title, Constants.MIME_FLDR);
                     String id, txt;
 
                     if (cvs.size() > 0)
@@ -30,7 +40,7 @@ public class Test
                     }
                     else
                     {
-                        id = RESTController.createFolder(parent, title);
+                        id = DriveController.createFolder(parent, title);
                         txt = "created ";
                     }
                     if (id != null)
@@ -45,6 +55,7 @@ public class Test
                     return id;
                 }
 
+                @RequiresApi(api = Build.VERSION_CODES.O)
                 @Override
                 protected Void doInBackground(Void... params)
                 {
@@ -56,11 +67,29 @@ public class Test
 
                         if (rsid != null)
                         {
-                            java.io.File fl = Utilities.str2File("content of " + title, "tmp" );
+                            Bitmap bm = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.test);
+                            File filesDir = ctx.getApplicationContext().getFilesDir();
+                            File imgFile = new File(filesDir, "test.jpg");
+                            OutputStream os;
+
+                            try
+                            {
+                                os = new FileOutputStream(imgFile);
+                                bm.compress(Bitmap.CompressFormat.JPEG, 100, os);
+                                os.flush();
+                                os.close();
+                            }
+                            catch (Exception e)
+                            {
+                                Log.e("Test", e.getMessage(), e);
+                            }
+
+                            Log.d("Test", "file: " + imgFile.getAbsolutePath());
+                            //java.io.File fl = Utilities.str2File("content of " + title, "tmp" );
                             String id = null;
-                            if (fl != null) {
-                                id = RESTController.createFile(rsid, title, Constants.MIME_TEXT, fl);
-                                fl.delete();
+                            if (imgFile != null) {
+                                id = DriveController.createFile(rsid, title, Constants.MIME_JPG, imgFile);
+                                imgFile.delete();
                             }
                             if (id != null)
                                 publishProgress("created " + title);
@@ -84,22 +113,91 @@ public class Test
     }
 
     @SuppressLint("StaticFieldLeak")
+    protected static void stressTestTree()
+    {
+        if (!MainActivity.isBusy)
+        {
+            MainActivity.dispText.setText("DOWNLOADING\n");
+            new AsyncTask<Void, String, Void>()
+            {
+                private void iterate(ContentValues parent)
+                {
+                    ArrayList<ContentValues> cvs = DriveController.search(null, null, Constants.MIME_JPG);
+                    if (cvs != null)
+                        for (ContentValues cv : cvs)
+                        {
+                            String driveID = cv.getAsString(Constants.DRIVE_ID);
+                            String title = cv.getAsString("title");
+
+                            if (DriveController.isFolder(cv))
+                            {
+                                publishProgress(title);
+                                iterate(cv);
+                            }
+                            else
+                            {
+                                byte[] buffer = DriveController.read(driveID);
+                                if (buffer == null)
+                                {
+                                    title += " failed";
+                                }
+                                publishProgress(title);
+                                String string = buffer == null ? "" : new String(buffer);
+                                File file = Utilities.str2File(string + "\n updated " + Utilities.time2Title(null), "tmp");
+                                if (file != null)
+                                {
+                                    String desc = "seen " + Utilities.time2Title(null);
+                                    DriveController.update(driveID, null, null, desc, file);
+                                    file.delete();
+                                }
+                            }
+                        }
+                }
+
+                @Override
+                protected Void doInBackground(Void... params) {
+                    MainActivity.isBusy = true;
+                    ArrayList<ContentValues> gfMyRoot = DriveController.search(null, null, Constants.MIME_JPG);
+                    if (gfMyRoot != null && gfMyRoot.size() == 1 ){
+                        publishProgress(gfMyRoot.get(0).getAsString("title"));
+                        iterate(gfMyRoot.get(0));
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void onProgressUpdate(String... strings) {
+                    super.onProgressUpdate(strings);
+                    MainActivity.dispText.append("\n" + strings[0]);
+                }
+
+                @Override
+                protected void onPostExecute(Void nada) {
+                    super.onPostExecute(nada);
+                    MainActivity.dispText.append("\n\nDONE");
+                    MainActivity.isBusy = false;
+                }
+            }.execute();
+        }
+    }
+
+    @SuppressLint("StaticFieldLeak")
     protected static void testTree() {
         if (!MainActivity.isBusy) {
             MainActivity.dispText.setText("DOWNLOADING\n");
             new AsyncTask<Void, String, Void>() {
 
                 private void iterate(ContentValues gfParent) {
-                    ArrayList<ContentValues> cvs = RESTController.search(gfParent.getAsString(Constants.DRIVE_ID), null, null);
+                    ArrayList<ContentValues> cvs = DriveController.search(gfParent.getAsString(Constants.DRIVE_ID), null, null);
                     if (cvs != null) for (ContentValues cv : cvs) {
                         String gdid = cv.getAsString(Constants.DRIVE_ID);
                         String titl = cv.getAsString("title");
 
-                        if (RESTController.isFolder(cv)) {
+                        if (DriveController.isFolder(cv)) {
                             publishProgress(titl);
                             iterate(cv);
                         } else {
-                            byte[] buf = RESTController.read(gdid);
+                            byte[] buf = DriveController.read(gdid);
                             if (buf == null)
                                 titl += " failed";
                             publishProgress(titl);
@@ -107,7 +205,7 @@ public class Test
                             java.io.File fl = Utilities.str2File(str + "\n updated " + Utilities.time2Title(null), "tmp" );
                             if (fl != null) {
                                 String desc = "seen " + Utilities.time2Title(null);
-                                RESTController.update(gdid, null, null, desc, fl);
+                                DriveController.update(gdid, null, null, desc, fl);
                                 fl.delete();
                             }
                         }
@@ -117,7 +215,7 @@ public class Test
                 @Override
                 protected Void doInBackground(Void... params) {
                     MainActivity.isBusy = true;
-                    ArrayList<ContentValues> gfMyRoot = RESTController.search("root", Constants.MYROOT, null);
+                    ArrayList<ContentValues> gfMyRoot = DriveController.search("root", Constants.MYROOT, null);
                     if (gfMyRoot != null && gfMyRoot.size() == 1 ){
                         publishProgress(gfMyRoot.get(0).getAsString("title"));
                         iterate(gfMyRoot.get(0));
@@ -151,26 +249,26 @@ public class Test
             new AsyncTask<Void, String, Void>() {
 
                 private void iterate(ContentValues gfParent) {
-                    ArrayList<ContentValues> cvs = RESTController.search(gfParent.getAsString(Constants.DRIVE_ID), null, null);
+                    ArrayList<ContentValues> cvs = DriveController.search(gfParent.getAsString(Constants.DRIVE_ID), null, null);
                     if (cvs != null) for (ContentValues cv : cvs) {
                         String titl = cv.getAsString("title");
                         String gdid = cv.getAsString(Constants.DRIVE_ID);
-                        if (RESTController.isFolder(cv))
+                        if (DriveController.isFolder(cv))
                             iterate(cv);
-                        publishProgress("  " + titl + (RESTController.trash(gdid) ? " OK" : " FAIL"));
+                        publishProgress("  " + titl + (DriveController.trash(gdid) ? " OK" : " FAIL"));
                     }
                 }
 
                 @Override
                 protected Void doInBackground(Void... params) {
                     MainActivity.isBusy = true;
-                    ArrayList<ContentValues> gfMyRoot = RESTController.search("root", Constants.MYROOT, null);
+                    ArrayList<ContentValues> gfMyRoot = DriveController.search("root", Constants.MYROOT, null);
                     if (gfMyRoot != null && gfMyRoot.size() == 1 ){
                         ContentValues cv = gfMyRoot.get(0);
                         iterate(cv);
                         String titl = cv.getAsString("title");
                         String gdid = cv.getAsString(Constants.DRIVE_ID);
-                        publishProgress("  " + titl + (RESTController.trash(gdid) ? " OK" : " FAIL"));
+                        publishProgress("  " + titl + (DriveController.trash(gdid) ? " OK" : " FAIL"));
                     }
                     return null;
                 }

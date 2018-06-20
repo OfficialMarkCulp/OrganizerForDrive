@@ -23,11 +23,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class RESTController
+public class DriveController
 {
-    private static final String TAG = "RESTController";
+    private static final String TAG = "DriveController";
 
-    private RESTController() {}
+    private DriveController() {}
 
     interface ConnectionCallback
     {

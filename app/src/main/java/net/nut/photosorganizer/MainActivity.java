@@ -1,34 +1,20 @@
 package net.nut.photosorganizer;
 
 import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
-import android.content.ContentValues;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.AccountPicker;
-import com.google.android.gms.drive.Drive;
-import com.google.android.gms.drive.DriveClient;
-import com.google.android.gms.drive.DriveResource;
-import com.google.android.gms.drive.DriveResourceClient;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
-import com.google.api.services.drive.model.File;
 
-import java.util.ArrayList;
-
-public class MainActivity extends AppCompatActivity implements RESTController.ConnectionCallback
+public class MainActivity extends AppCompatActivity implements DriveController.ConnectionCallback
 {
     private static final String TAG = "MainActivity";
 
@@ -41,13 +27,15 @@ public class MainActivity extends AppCompatActivity implements RESTController.Co
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Test.ctx = this;
+
         dispText = findViewById(R.id.dispText);
 
         if (savedInstanceState == null)
         {
             Utilities.init(this);
 
-            if (!RESTController.init(this))
+            if (!DriveController.init(this))
             {
                 startActivityForResult(AccountPicker.newChooseAccountIntent(null,
                         null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true,
@@ -61,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements RESTController.Co
     {
         super.onResume();
 
-        RESTController.connect();
+        DriveController.connect();
     }
 
     @Override
@@ -69,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements RESTController.Co
     {
         super.onPause();
 
-        RESTController.disconnect();
+        DriveController.disconnect();
     }
 
     @Override
@@ -112,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements RESTController.Co
         {
             case Constants.REQ_CODE_CONNECT:
                 if (resultCode == RESULT_OK)
-                    RESTController.connect();
+                    DriveController.connect();
                 else
                     suicide("err_nogo");
                 break;
@@ -121,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements RESTController.Co
                 {
                     Utilities.AccountManager.setEmail(data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME));
                 }
-                if (!RESTController.init(this))
+                if (!DriveController.init(this))
                 {
                     suicide("err_auth_accpick");
                 }

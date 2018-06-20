@@ -11,6 +11,8 @@ public class Constants
     public static final String MYROOT = "DEMORoot";
     public static final String MIME_TEXT = "text/plain";
     public static final String MIME_FLDR = "application/vnd.google-apps.folder";
+    public static final String MIME_JPG = "image/jpg";
+    public static final String MIME_IMG = "image";
     static final String TITLE = "title";
     static final String DRIVE_ID = "driveID";
     static final String MIME = "mime";
