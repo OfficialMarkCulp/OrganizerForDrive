@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">PhotosOrganizer</string>
+    <string name="disp_text">
+        \n\n
+        1. Upload icon uploads a text file to Drive, creating a simple tree
+           directory structure in the process.\n
+        2. Download icon scans the tree created by the createTree() method. If the
+           object is a file, its metadata is updated and the content is downloaded.
+        3. X icon scans the tree created by the createTree() method and deletes all
+           the files and folders in the process.
+    </string>
+    <string name="action_scan">UPLOAD</string>
+    <string name="action_list">DOWNLOAD</string>
+    <string name="action_delete">DELETE</string>
+    <string name="action_account">Select a Google account...</string>
 </resources>
