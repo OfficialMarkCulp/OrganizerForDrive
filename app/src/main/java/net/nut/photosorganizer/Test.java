@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 public class Test
 {
-    protected static Context ctx;
+    /*protected static Context ctx;
 
     @SuppressLint("StaticFieldLeak")
     protected static void createTree(final String title)
@@ -254,7 +254,7 @@ public class Test
 
     /**
      *  scans folder tree created by this app deleting folders / files in the process
-     */
+     *
     @SuppressLint("StaticFieldLeak")
     protected static void deleteTree() {
         if (!MainActivity.isBusy) {
@@ -306,5 +306,5 @@ public class Test
                 }
             }.execute();
         }
-    }
+    }*/
 }

@@ -54,7 +54,7 @@ public class DriveController
                 callback = (ConnectionCallback)activity;
                 driveService = new Drive.Builder(AndroidHttp.newCompatibleTransport(),
                         new GsonFactory(), GoogleAccountCredential.usingOAuth2(Utilities.context,
-                            Collections.singletonList(DriveScopes.DRIVE_FILE))
+                            Collections.singletonList(DriveScopes.DRIVE))
                             .setSelectedAccountName(email)
                 ).build();
                 return true;
@@ -134,12 +134,10 @@ public class DriveController
      * @param title     (optional)  The name of the thing we're looking for.
      * @param mime      (optional)  The mime type of the thing we're looking for.
      * @param pageToken (optional)  The token of the next page of results.
-     * @return                      The token for the next page of results.
+     * @return                      The list of found files.
      */
-    public static String paginatedSearch(String parent, String title, String mime, String pageToken)
+    public static FileList paginatedSearch(String parent, String title, String mime, String pageToken)
     {
-        ArrayList<ContentValues> matches = new ArrayList<>();
-
         if (driveService != null && isConnected)
         {
             try
@@ -150,31 +148,30 @@ public class DriveController
                 if (title != null)
                     queryClause += "title = '" + title + "' and ";
                 if (mime != null)
-                    queryClause += "mimeType = '" + mime + "' and ";
+                    queryClause += "mimeType contains '" + mime + "' and ";
                 queryClause = queryClause.substring(0, queryClause.length() - " and ".length());
 
                 Drive.Files.List query = driveService.files().list()
                         .setQ(queryClause)
-                        .setFields("items(id,mimeType,labels/trashed,title),nextPageToken");
+                        .setFields("items(id,mimeType,labels/trashed,title,thumbnailLink,embedLink),nextPageToken")
+                        .setMaxResults(20);
                 if (pageToken != null)
                     query.setPageToken(pageToken);
 
                 if (query != null)
                 {
                     FileList list = query.execute();
-
+                    String nextToken = list.getNextPageToken();
+                    String t2 = query.getPageToken();
                     if (list != null)
                     {
                         for (File file : list.getItems())
                         {
-                            if (file.getLabels().getTrashed())
+                            if (!file.getLabels().getTrashed())
                                 continue;
-                            matches.add(Utilities.newVals(file.getTitle(), file.getId(), file.getMimeType()));
+                            list.remove(file);
                         }
-
-                        searchResults = matches;
-
-                        return list.getNextPageToken();
+                        return list;
                     }
                 }
             }

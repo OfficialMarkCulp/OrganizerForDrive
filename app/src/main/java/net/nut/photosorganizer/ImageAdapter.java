@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
 
 public class ImageAdapter extends BaseAdapter
 {
@@ -129,10 +129,11 @@ public class ImageAdapter extends BaseAdapter
         }
 
         ImageManager.MediaItem item = getItem(position);
-        Picasso.with(parent.getContext())
+        GlideApp.with(parent.getContext())
                 .load(item.thumbLink)
                 .placeholder(R.drawable.thumbnail_placeholder)
-                .error(R.drawable.thumbnail_placeholder)
+                .dontAnimate()
+                .centerCrop()
                 .into(holder.thumb);
         holder.thumb.setScaleType(ImageView.ScaleType.CENTER_CROP);
         holder.title.setText(item.title);

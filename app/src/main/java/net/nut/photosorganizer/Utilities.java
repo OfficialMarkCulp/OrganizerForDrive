@@ -3,15 +3,20 @@ package net.nut.photosorganizer;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Log;
+
+import com.bumptech.glide.Glide;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -24,11 +29,17 @@ public class Utilities
 
     private static SharedPreferences preferences;
     public static Context context;
+    private static GlideApp glide = null;
 
     static void init(Context ctx)
     {
         context = ctx.getApplicationContext();
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public static GlideApp getGlide()
+    {
+        return glide;
     }
 
     static class AccountManager
@@ -154,4 +165,22 @@ public class Utilities
     {
         return title == null ? null : ("20" + title.substring(0, 2) + "-" + title.substring(2, 4));
     }
+
+    // TODO: Either revisit or remove this.
+    /*
+    public static Picasso getAuthPicasso(Context context, final String authToken)
+    {
+        if (authPicasso == null)
+        {
+            Picasso.Builder builder = new Picasso.Builder(context);
+            builder.downloader(new UrlConnectionDownloader(context) {
+                @Override
+                protected HttpURLConnection openConnection(Uri uri) throws IOException
+                {
+                    HttpURLConnection connection = super.openConnection(uri);
+                    connection.setRequestProperty();
+                }
+            })
+        }
+    }*/
 }

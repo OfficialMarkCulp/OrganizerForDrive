@@ -1,6 +1,10 @@
 package net.nut.photosorganizer;
 
+import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class ImageManager
 {
@@ -10,7 +14,7 @@ public class ImageManager
     private ArrayList<MediaItem> imageFeed = new ArrayList<>();
 
     /** The current instance of the ImageManager. */
-    private ImageManager instance = null;
+    private static ImageManager instance = null;
 
     /** Token for the next page of results. */
     private String nextPage = null;
@@ -24,7 +28,7 @@ public class ImageManager
      * Get the ImageManager instance.
      * @return  The instance.
      */
-    public ImageManager getInstance()
+    public static ImageManager getInstance()
     {
         if (instance == null)
             instance = new ImageManager();
@@ -47,10 +51,34 @@ public class ImageManager
      */
     public boolean isAtEnd() { return nextPage == null; }
 
+    public ArrayList<MediaItem> getPhotos()
+    {
+        ArrayList<MediaItem> images = new ArrayList<>();
+
+        FileList results = DriveController.paginatedSearch(null, null, Constants.MIME_IMG, nextPage);
+
+        nextPage = results.getNextPageToken();
+        List<File> files = results.getItems();
+
+        for (File file : files)
+        {
+            MediaItem newItem = new MediaItem();
+
+            newItem.embedLink = file.getEmbedLink();
+            newItem.id = file.getId();
+            newItem.thumbLink = file.getThumbnailLink();
+            newItem.title = file.getTitle();
+
+            images.add(newItem);
+        }
+
+        return images;
+    }
+
     /** Template for a MediaItem. Represents any item fetched from Drive. */
     public class MediaItem
     {
-        String thumbLink;
-        String title;
+        String id, title, thumbLink, embedLink;
+
     }
 }

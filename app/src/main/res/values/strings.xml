@@ -10,8 +10,14 @@
            the files and folders in the process.
     </string>
 
+    <!-- Old menu actions. -->
     <string name="action_scan">UPLOAD</string>
     <string name="action_list">DOWNLOAD</string>
     <string name="action_delete">DELETE</string>
     <string name="action_account">Select a Google account...</string>
+
+    <!-- New menu actions. -->
+    <string name="action_search">Fetch from Google Photos</string>
+    <string name="action_settings">Settings</string>
+    <string name="no_internet">There\'s no internet. Check your connection.</string>
 </resources>
